@@ -20,6 +20,7 @@ import (
 
 	"github.com/grpc-ecosystem/go-grpc-prometheus"
 	"github.com/juju/errors"
+	"github.com/ngaut/log"
 	"github.com/pingcap/kvproto/pkg/tikvpb"
 	"github.com/pingcap/tidb/store/tikv/tikvrpc"
 	goctx "golang.org/x/net/context"
@@ -131,7 +132,13 @@ func (c *rpcClient) SendReq(ctx goctx.Context, addr string, req *tikvrpc.Request
 		return nil, errors.Trace(err)
 	}
 	client := tikvpb.NewTikvClient(conn)
+	if req.Type == tikvrpc.CmdCop {
+		log.Error("rpc_cop send request, addr: %v, msg: %v", addr, req)
+	}
 	resp, err := c.callRPC(ctx, client, req)
+	if req.Type == tikvrpc.CmdCop {
+		log.Error("rpc_cop recv response, addr: %v, msg: %v, err: %v", addr, resp, err)
+	}
 	if err != nil {
 		return nil, errors.Trace(err)
 	}
