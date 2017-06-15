@@ -944,10 +944,10 @@ func (e *XSelectTableExec) Next() (*Row, error) {
 			if e.partialResult == nil {
 				// Finished.
 				duration := time.Since(e.execStart)
-				if duration > minLogDuration {
-					connID := e.ctx.GetSessionVars().ConnectionID
-					log.Infof("[%d] [TIME_TABLE_SCAN] %s", connID, e.slowQueryInfo(duration))
-				}
+				//if duration > minLogDuration {
+				connID := e.ctx.GetSessionVars().ConnectionID
+				log.Infof("[%d] [TIME_TABLE_SCAN] %s", connID, e.slowQueryInfo(duration))
+				//}
 				return nil, nil
 			}
 			e.partialCount++

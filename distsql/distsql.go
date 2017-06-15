@@ -17,6 +17,7 @@ import (
 	"time"
 
 	"github.com/juju/errors"
+	"github.com/ngaut/log"
 	"github.com/pingcap/tidb/kv"
 	"github.com/pingcap/tidb/model"
 	"github.com/pingcap/tidb/mysql"
@@ -63,6 +64,7 @@ type selectResult struct {
 
 	results chan resultWithErr
 	closed  chan struct{}
+	cnt     int
 }
 
 type resultWithErr struct {
@@ -87,7 +89,9 @@ func (r *selectResult) fetch(ctx goctx.Context) {
 			r.results <- resultWithErr{err: errors.Trace(err)}
 			return
 		}
+		r.cnt++
 		if resultSubset == nil {
+			log.Infof("[MBK] get %d partial results", r.cnt)
 			return
 		}
 		pr := &partialResult{}
@@ -112,6 +116,7 @@ func (r *selectResult) Next() (PartialResult, error) {
 
 // Close closes SelectResult.
 func (r *selectResult) Close() error {
+	log.Infof("[MBK] get %d partial results 11", r.cnt)
 	// close this channel tell fetch goroutine to exit
 	close(r.closed)
 	return r.resp.Close()
@@ -123,6 +128,7 @@ type partialResult struct {
 	chunkIdx   int
 	cursor     int
 	dataOffset int64
+	cnt        int
 }
 
 func (pr *partialResult) unmarshal(resultSubset []byte) error {
@@ -146,6 +152,7 @@ var zeroLenData = make([]byte, 0)
 func (pr *partialResult) Next() (handle int64, data []byte, err error) {
 	chunk := pr.getChunk()
 	if chunk == nil {
+		log.Infof("[MBK] partial result get %d rows", pr.cnt)
 		return 0, nil, nil
 	}
 	rowMeta := chunk.RowsMeta[pr.cursor]
@@ -153,10 +160,12 @@ func (pr *partialResult) Next() (handle int64, data []byte, err error) {
 	if data == nil {
 		// The caller checks if data is nil to determine finished.
 		data = zeroLenData
+		log.Infof("[MBK] partial result get %d rows", pr.cnt)
 	}
 	pr.dataOffset += rowMeta.Length
 	handle = rowMeta.Handle
 	pr.cursor++
+	pr.cnt++
 	return
 }
 
@@ -177,6 +186,7 @@ func (pr *partialResult) getChunk() *tipb.Chunk {
 
 // Close closes the sub result.
 func (pr *partialResult) Close() error {
+	//log.Infof("[MBK] partial result get 0 rows")
 	return nil
 }
 

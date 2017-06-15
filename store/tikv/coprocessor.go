@@ -55,7 +55,8 @@ func supportExpr(exprType tipb.ExprType) bool {
 		tipb.ExprType_MysqlDuration, tipb.ExprType_MysqlTime, tipb.ExprType_MysqlDecimal,
 		tipb.ExprType_ColumnRef,
 		tipb.ExprType_And, tipb.ExprType_Or,
-		tipb.ExprType_LT, tipb.ExprType_LE, tipb.ExprType_EQ, tipb.ExprType_NE,
+		//tipb.ExprType_LT, tipb.ExprType_LE, tipb.ExprType_EQ, tipb.ExprType_NE,
+		tipb.ExprType_LT, tipb.ExprType_LE, tipb.ExprType_NE,
 		tipb.ExprType_GE, tipb.ExprType_GT, tipb.ExprType_NullEQ,
 		tipb.ExprType_In, tipb.ExprType_ValueList,
 		tipb.ExprType_Like, tipb.ExprType_Not:
@@ -79,6 +80,7 @@ func (c *CopClient) Send(ctx goctx.Context, req *kv.Request) kv.Response {
 
 	bo := NewBackoffer(copBuildTaskMaxBackoff, ctx)
 	tasks, err := buildCopTasks(bo, c.store.regionCache, &copRanges{mid: req.KeyRanges}, req.Desc)
+	log.Infof("[MBK] tasks %d", len(tasks))
 	if err != nil {
 		return copErrorResponse{err}
 	}
