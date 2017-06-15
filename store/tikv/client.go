@@ -133,11 +133,11 @@ func (c *rpcClient) SendReq(ctx goctx.Context, addr string, req *tikvrpc.Request
 	}
 	client := tikvpb.NewTikvClient(conn)
 	if req.Type == tikvrpc.CmdCop {
-		log.Error("rpc_cop send request, addr: %v, msg: %v", addr, req)
+		log.Errorf("rpc_cop send request, addr: %v, msg: %v", addr, req)
 	}
 	resp, err := c.callRPC(ctx, client, req)
 	if req.Type == tikvrpc.CmdCop {
-		log.Error("rpc_cop recv response, addr: %v, msg: %v, err: %v", addr, resp, err)
+		log.Errorf("rpc_cop recv response, addr: %v, msg: %v, err: %v", addr, resp, err)
 	}
 	if err != nil {
 		return nil, errors.Trace(err)
